@@ -6,11 +6,17 @@ import uuid
 
 app = FastAPI()
 
+# connect redis
 r = redis.Redis(host="localhost", port=6379, decode_responses=True)
 
+# request schema
 class AuditRequest(BaseModel):
     url: str
 
+
+# --------------------------
+# CREATE AUDIT JOB
+# --------------------------
 @app.post("/audit")
 def run_audit(data: AuditRequest):
 
@@ -28,6 +34,10 @@ def run_audit(data: AuditRequest):
         "job_id": job_id
     }
 
+
+# --------------------------
+# GET RESULT
+# --------------------------
 @app.get("/result/{job_id}")
 def get_result(job_id: str):
 

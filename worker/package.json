@@ -1,0 +1,13 @@
+
+
+{
+  "name": "worker",
+  "version": "1.0.0",
+  "description": "",
+  "main": "runAudit.js",
+  "type": "module",
+  "dependencies": {
+    "lighthouse": "^12.8.2",
+    "chrome-launcher": "^1.2.1"
+  }
+}
