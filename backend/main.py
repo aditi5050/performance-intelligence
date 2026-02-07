@@ -1,20 +1,39 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import redis
 import json
 import uuid
 
+# ==============================
+# APP INIT
+# ==============================
+
 app = FastAPI()
+
+# enable CORS (for frontend dashboard)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # connect redis
 r = redis.Redis(host="localhost", port=6379, decode_responses=True)
 
-# request schema
+# ==============================
+# REQUEST MODEL
+# ==============================
+
 class AuditRequest(BaseModel):
     url: str
 
+# ==============================
+# CREATE AUDIT JOB
+# ==============================
 
-# create audit job
 @app.post("/audit")
 def run_audit(data: AuditRequest):
 
@@ -33,8 +52,10 @@ def run_audit(data: AuditRequest):
         "job_id": job_id
     }
 
+# ==============================
+# GET RESULT
+# ==============================
 
-# get audit result
 @app.get("/result/{job_id}")
 def get_result(job_id: str):
 
@@ -45,8 +66,10 @@ def get_result(job_id: str):
 
     return {"status": "processing"}
 
+# ==============================
+# GET HISTORY
+# ==============================
 
-# get history
 @app.get("/history")
 def get_history(url: str):
 

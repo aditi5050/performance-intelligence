@@ -18,11 +18,19 @@ async function runAudit() {
     const audits = runnerResult.lhr.audits;
 
     const result = {
-        performance_score: runnerResult.lhr.categories.performance.score * 100,
-        lcp: audits['largest-contentful-paint'].numericValue,
-        cls: audits['cumulative-layout-shift'].numericValue,
-        tbt: audits['total-blocking-time'].numericValue
-    };
+    performance_score: runnerResult.lhr.categories.performance.score * 100,
+    lcp: audits['largest-contentful-paint'].numericValue,
+    cls: audits['cumulative-layout-shift'].numericValue,
+    tbt: audits['total-blocking-time'].numericValue,
+
+    deep_audits: {
+        render_blocking: audits['render-blocking-resources'].details?.items || [],
+        unused_css: audits['unused-css-rules'].details?.items || [],
+        unused_js: audits['unused-javascript'].details?.items || [],
+        lcp_element: audits['largest-contentful-paint-element'].details?.items || []
+    }
+};
+
 
     // VERY IMPORTANT → output ONLY JSON
     console.log(JSON.stringify(result));
