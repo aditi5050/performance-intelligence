@@ -1,41 +1,64 @@
-import lighthouse from 'lighthouse';
-import { launch } from 'chrome-launcher';
+import lighthouse from "lighthouse";
+import { launch } from "chrome-launcher";
 
 const url = process.argv[2];
 
-async function runAudit() {
+async function runAudit(){
 
-    const chrome = await launch({ chromeFlags: ['--headless'] });
+ let chrome;
 
-    const options = {
-        logLevel: 'silent',
-        output: 'json',
-        port: chrome.port,
-    };
+ try{
 
-    const runnerResult = await lighthouse(url, options);
+  chrome = await launch({
+    chromeFlags:["--headless","--no-sandbox"]
+  });
 
-    const audits = runnerResult.lhr.audits;
+  const options={
+    logLevel:"silent",
+    output:"json",
+    port:chrome.port
+  };
 
-    const result = {
-    performance_score: runnerResult.lhr.categories.performance.score * 100,
-    lcp: audits['largest-contentful-paint'].numericValue,
-    cls: audits['cumulative-layout-shift'].numericValue,
-    tbt: audits['total-blocking-time'].numericValue,
+  const runnerResult = await lighthouse(url,options);
 
-    deep_audits: {
-        render_blocking: audits['render-blocking-resources'].details?.items || [],
-        unused_css: audits['unused-css-rules'].details?.items || [],
-        unused_js: audits['unused-javascript'].details?.items || [],
-        lcp_element: audits['largest-contentful-paint-element'].details?.items || []
+  const audits = runnerResult.lhr.audits;
+
+  const safe = (name)=>audits[name]?.numericValue || 0;
+  const safeItems = (name)=>audits[name]?.details?.items || [];
+
+  const result = {
+
+    performance_score:
+      (runnerResult.lhr.categories.performance.score || 0)*100,
+
+    lcp: safe("largest-contentful-paint"),
+    cls: safe("cumulative-layout-shift"),
+    tbt: safe("total-blocking-time"),
+
+    deep_audits:{
+      render_blocking:safeItems("render-blocking-resources"),
+      unused_css:safeItems("unused-css-rules"),
+      unused_js:safeItems("unused-javascript"),
+      lcp_element:safeItems("largest-contentful-paint-element")
     }
-};
 
+  };
 
-    // VERY IMPORTANT → output ONLY JSON
-    console.log(JSON.stringify(result));
+  console.log(JSON.stringify(result));
 
-    await chrome.kill();
+ }catch(error){
+
+   console.log(JSON.stringify({
+     error:true,
+     message:error.message
+   }));
+
+ }finally{
+
+   if(chrome){
+     await chrome.kill();
+   }
+ }
 }
 
 runAudit();
